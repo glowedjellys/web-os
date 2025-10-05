@@ -19,7 +19,9 @@ function openApp(appName) {
 
 function getAppContent(app) {
   if (app === 'notes') {
-    return `<textarea id="noteArea"></textarea><button onclick="saveNote()">Save</button>`;
+    return `<textarea id="noteArea"></textarea><br/>
+            <button onclick="saveNote()">Save</button>
+            <button onclick="loadNote()">Load</button>`;
   }
   if (app === 'calculator') {
     return `<input id="calcInput"/><button onclick="calculate()">=</button><div id="calcResult"></div>`;
@@ -29,11 +31,19 @@ function getAppContent(app) {
 
 function saveNote() {
   const note = document.getElementById('noteArea').value;
-  fetch('/api/saveNote', {
+  fetch('/save', {
     method: 'POST',
-    body: JSON.stringify({ note }),
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ note })
   });
+}
+
+function loadNote() {
+  fetch('/load')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('noteArea').value = data.note;
+    });
 }
 
 function calculate() {
