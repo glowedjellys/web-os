@@ -26,9 +26,23 @@ function getAppContent(app) {
   if (app === 'calculator') {
     return `<input id="calcInput"/><button onclick="calculate()">=</button><div id="calcResult"></div>`;
   }
+  if (app === 'login') {
+    return `<input id="username" placeholder="Username"/><br/>
+            <input id="password" type="password" placeholder="Password"/><br/>
+            <button onclick="login()">Login</button>
+            <button onclick="register()">Register</button>`;
+  }
+  if (app === 'upload') {
+    return `<input type="file" id="fileInput"/><button onclick="uploadFile()">Upload</button>`;
+  }
+  if (app === 'chat') {
+    return `<div id="chatBox" style="height:100px;overflow:auto;border:1px solid #ccc;"></div>
+            <input id="chatInput"/><button onclick="sendChat()">Send</button>`;
+  }
   return 'App not found';
 }
 
+// Notes
 function saveNote() {
   const note = document.getElementById('noteArea').value;
   fetch('/save', {
@@ -46,11 +60,71 @@ function loadNote() {
     });
 }
 
+// Calculator
 function calculate() {
   const input = document.getElementById('calcInput').value;
-  document.getElementById('calcResult').innerText = eval(input);
+  try {
+    document.getElementById('calcResult').innerText = eval(input);
+  } catch {
+    document.getElementById('calcResult').innerText = 'Error';
+  }
 }
 
+// Login/Register
+function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  }).then(res => res.json()).then(data => {
+    alert(data.success ? 'Login successful' : 'Login failed');
+  });
+}
+
+function register() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  fetch('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  }).then(res => res.json()).then(data => {
+    alert('Registered!');
+  });
+}
+
+// File Upload
+function uploadFile() {
+  const file = document.getElementById('fileInput').files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  fetch('/upload', {
+    method: 'POST',
+    body: formData
+  }).then(res => res.json()).then(data => {
+    alert('Uploaded: ' + data.filename);
+  });
+}
+
+// Real-time Chat
+function sendChat() {
+  const msg = document.getElementById('chatInput').value;
+  socket.emit('chat message', msg);
+  document.getElementById('chatInput').value = '';
+}
+
+const socket = io();
+socket.on('chat message', msg => {
+  const box = document.getElementById('chatBox');
+  if (box) {
+    box.innerHTML += '<div>' + msg + '</div>';
+    box.scrollTop = box.scrollHeight;
+  }
+});
+
+// Dragging windows
 function makeDraggable(win, header) {
   let offsetX, offsetY;
   header.onmousedown = function(e) {
